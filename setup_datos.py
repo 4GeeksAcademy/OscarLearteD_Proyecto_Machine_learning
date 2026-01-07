@@ -1,36 +1,35 @@
 import zipfile
 import os
-import shutil
 
-# Configuración
-zip_file = 'datos_proyecto.zip'
-carpeta_destino = 'src' # Donde suelen vivir los notebooks
+# --- CONFIGURACIÓN ---
+nombre_zip = 'datos_proyecto.zip'
 
-def instalar_datos():
-    if not os.path.exists(zip_file):
-        print("❌ ERROR: No encuentro 'datos_proyecto.zip'.")
-        print("   ¿Has hecho 'git pull' para bajarte los últimos cambios?")
-        return
+# 1. BUSCAR EL ZIP (Sea donde sea que estemos)
+# Buscamos en la carpeta actual (.) y en la carpeta superior (..)
+rutas_posibles = [
+    nombre_zip,                 # Si se ejecuta desde la raíz
+    os.path.join('..', nombre_zip), # Si se ejecuta desde src/
+    os.path.join('src', nombre_zip) # Por si acaso
+]
 
-    print(f"📦 Descomprimiendo {zip_file}...")
-    
-    # Determinar dónde extraer
-    ruta_extraccion = '.'
-    if os.path.exists(carpeta_destino):
-        ruta_extraccion = carpeta_destino
-        print(f"   -> Detectada carpeta '{carpeta_destino}'. Los datos irán allí.")
-    else:
-        print("   -> No veo carpeta 'src', se descomprimirán aquí mismo (raíz).")
+archivo_encontrado = None
+for ruta in rutas_posibles:
+    if os.path.exists(ruta):
+        archivo_encontrado = ruta
+        print(f"✅ ZIP encontrado en: {archivo_encontrado}")
+        break
 
+# 2. DESCOMPRIMIR
+if archivo_encontrado:
+    print("📂 Descomprimiendo archivos...")
     try:
-        with zipfile.ZipFile(zip_file, 'r') as zip_ref:
-            zip_ref.extractall(ruta_extraccion)
-        
-        print("\n✅ ¡LISTO! Archivos CSV descomprimidos con éxito.")
-        print(f"📍 Los tienes en: {os.path.abspath(ruta_extraccion)}")
-        
+        # Extraemos en la carpeta actual donde se ejecuta el script
+        with zipfile.ZipFile(archivo_encontrado, 'r') as zip_ref:
+            zip_ref.extractall('.')
+        print("🎉 ¡ÉXITO! Los archivos CSV ya están listos para usarse.")
     except Exception as e:
-        print(f"❌ Algo falló al descomprimir: {e}")
-
-if __name__ == "__main__":
-    instalar_datos()
+        print(f"❌ Error al descomprimir: {e}")
+else:
+    print("❌ ERROR: No encuentro 'datos_proyecto.zip'.")
+    print(f"   He buscado en: {rutas_posibles}")
+    print("   Asegúrate de haber descargado el ZIP o hecho git pull.")
